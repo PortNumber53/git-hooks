@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+# Hook script to check the changed files with php lint
+# Called by "git commit" with no arguments.
+#
+# To enable this hook, rename this file to "pre-commit".
+
+if git rev-parse --verify HEAD >/dev/null 2>&1
+then
+    against=HEAD
+else
+    # Initial commit: diff against an empty tree object
+    against=4b825dc642cb6eb9a060e54bf8d69288fbee4904
+fi
+
+if !(git diff --cached --name-only --diff-filter=AM $against | grep 'php' | xargs -P 10 -n1 php -l)
+then
+    echo
+    echo "Error: You attempted to commit one or more php files with syntax errors."
+    echo
+    echo "Please fix them and retry the commit."
+    echo
+    exit 1
+fi
+
+exec git diff-index --check --cached $against --
+
